@@ -25,6 +25,7 @@ const (
 	ioSize      = 4096
 	chargenSize = 2048
 	editSize    = 2048
+	blanckSize  = 8192
 
 	nbMemLayout = 1
 
@@ -46,6 +47,7 @@ var (
 	BASIC3   []byte
 	EDITOR   []byte
 	CHARGEN  []byte
+	BLANK    []byte
 	MEM      mem.BANK
 	IOAccess mem.MEMAccess
 
@@ -66,13 +68,14 @@ func setup() {
 	// ROMs & RAM Setup
 	RAM = make([]byte, ramSize)
 	IO = make([]byte, ioSize)
+	BLANK = make([]byte, blanckSize)
 	KERNAL = mem.LoadROM(kernalSize, "assets/roms/kernal-4.901465-22.bin")
 	BASIC1 = mem.LoadROM(basicSize, "assets/roms/basic-4-b000.901465-19.bin")
 	BASIC2 = mem.LoadROM(basicSize, "assets/roms/basic-4-c000.901465-20.bin")
 	BASIC3 = mem.LoadROM(basicSize, "assets/roms/basic-4-d000.901465-21.bin")
 	CHARGEN = mem.LoadROM(chargenSize, "assets/roms/characters-2.901447-10.bin")
-	EDITOR = mem.LoadROM(editSize, "assets/roms/edit-4-40-n-50Hz.901498-01.bin")
-	// EDITOR = mem.LoadROM(editSize, "assets/roms/edit-4-b.901474-02.bin")
+	// EDITOR = mem.LoadROM(editSize, "assets/roms/edit-4-40-n-50Hz.901498-01.bin")
+	EDITOR = mem.LoadROM(editSize, "assets/roms/edit-4-b.901474-02.bin")
 
 	mem.Clear(RAM)
 	mem.Clear(IO)
@@ -83,7 +86,6 @@ func setup() {
 	var test byte = 0
 	MEM = mem.InitBanks(nbMemLayout, &test)
 	IOAccess = &accessor{}
-	fillIOMapper()
 
 	// MEM Setup
 	memLayouts()
