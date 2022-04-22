@@ -3,7 +3,6 @@ package crtc
 import (
 	"newPET/config"
 	"newPET/graphic"
-	"newPET/mem"
 )
 
 var (
@@ -46,74 +45,47 @@ var Colors [16]graphic.RGB = [16]graphic.RGB{
 
 // VIC :
 type CRTC struct {
-	VML         [40]uint16 // Video Matrix Line
-	VMLI        byte       // Video Matrix Line Indexer
-	VC          uint16     // Vide Counter
-	VCBASE      uint16     // Video Counter Base
-	RC          byte       // Row counter
-	BA          bool       // High: normal / Low: BadLine
-	SystemClock uint16
-	Reg         [64]byte
+	Reg [18]byte
 
-	conf  *config.ConfigData
-	BeamX int
-	BeamY int
-	cycle int
+	conf        *config.ConfigData
+	BeamX       int
+	BeamY       int
+	RasterLine  byte
+	RasterCount byte
+	CCLK        byte
 
 	visibleArea bool
-	displayArea bool
-	drawArea    bool
 
-	ColorBuffer [40]byte
-	CharBuffer  [40]byte
+	graph graphic.Driver
+	MODE  byte
 
-	IRQ_Pin   *int
-	RasterIRQ uint16
-	graph     graphic.Driver
-
-	color      []byte
-	BankSel    byte
-	ScreenBase uint16
-	CharBase   uint16
-	bankMem    mem.BANK
-
-	ECM  bool
-	BMM  bool
-	MCM  bool
-	MODE byte
+	videoRam []byte
+	charRom  []byte
 }
 
-var (
-	R0 byte // Longueur d'une ligne (displayed + sync)
-	R1 byte // Nb de characteres par ligne
-	R2 byte // Pos du sync start par apport au debut de la ligne
-	R3 byte // Sync control (0-3: Horizontal, 4-7: Vertical)
-	R4 byte // Nb total de lignes
-	R5 byte // Nb de scanlines à ajouter pour compléter l'ecran
-	R6 byte // Nb de lignes visibles affichées
-	R7 byte // Pos du vertical sync
-
-	R8 byte
-	R9 byte
+const (
+	R0 byte = iota // Longueur d'une ligne (displayed + sync)
+	R1             // Nb de characteres par ligne
+	R2             // Pos du sync start par apport au debut de la ligne
+	R3             // Sync control (0-3: Horizontal, 4-7: Vertical)
+	R4             // Nb total de lignes
+	R5             // Nb de scanlines à ajouter pour compléter l'ecran
+	R6             // Nb de lignes visibles affichées
+	R7             // Pos du vertical sync
+	R8
+	R9
+	R10
+	R11
+	R12
+	R13
+	R14
+	R15
+	R16
+	R17
 )
 
 const (
 	colorStart  = 0x0800 // 0xD800 translated
 	screenStart = 0x8000
 	screenSize  = 4096
-
-	PALNTSC uint16 = 0x02A6
-
-	YSCROLL byte = 0b00000111 // From REG_CTRL1
-	RSEL    byte = 0b00001000 // rom REG_CTRL1 : 0 = 24 rows; 1 = 25 rows.
-	DEN     byte = 0b00010000 // rom REG_CTRL1 : 0 = Screen off, 1 = Screen on.
-	// BMM     byte = 0b00100000 // rom REG_CTRL1 : 0 = Text mode; 1 = Bitmap mode.
-	// ECM     byte = 0b01000000 // rom REG_CTRL1 : 1 = Extended background mode on.
-	// MCM     byte = 0b00010000 // rom REG_CTRL2
-	RST8 byte = 0b10000000 // rom REG_CTRL1 : Read: Current raster line (bit #8). Write: Raster line to generate interrupt at (bit #8).
-
-	IRQ_RST byte = 0b00000001 // Raster line interrupt
-	IRQ_MBC byte = 0b00000010 // Sprite collision with background
-	IRQ_MMC byte = 0b00000100 // Sprite vs sprite collision
-	IRQ_LP  byte = 0b00001000 // Light pen negative edge
 )

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"newPET/config"
+	"newPET/crtc"
 	"newPET/graphic"
 	"newPET/mem"
 	"newPET/mos6510"
@@ -48,6 +49,7 @@ var (
 	IOAccess mem.MEMAccess
 
 	outputDriver graphic.Driver
+	CRTC         crtc.CRTC
 	cpuTurn      bool
 	run          bool
 	execInst     sync.Mutex
@@ -84,6 +86,7 @@ func setup() {
 	memLayouts()
 
 	outputDriver = &graphic.SDLDriver{}
+	CRTC.Init(RAM, IO, CHARGEN, outputDriver, conf)
 
 	// CPU Setup
 	cpu.Init(&MEM, conf)
@@ -158,17 +161,16 @@ func timeTrack(start time.Time, name string) {
 
 func RunEmulation() {
 	// defer timeTrack(time.Now(), "RunEmulation")
-	cpuTurn = true
+	CRTC.Run(!run)
 	if cpu.State == mos6510.ReadInstruction && !run {
 		execInst.Lock()
 	}
-	if cpuTurn {
-		cpu.NextCycle()
-		if cpu.State == mos6510.ReadInstruction {
-			if conf.Breakpoint == cpu.InstStart {
-				conf.Disassamble = true
-				run = false
-			}
+
+	cpu.NextCycle()
+	if cpu.State == mos6510.ReadInstruction {
+		if conf.Breakpoint == cpu.InstStart {
+			conf.Disassamble = true
+			run = false
 		}
 	}
 
