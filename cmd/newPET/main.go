@@ -76,6 +76,7 @@ func setup() {
 
 	mem.Clear(RAM)
 	mem.Clear(IO)
+	// mem.DisplayCharRom(CHARGEN, 1, 8, 16)
 
 	// RAM[0x0001] = 0x00
 	// MEM = mem.InitBanks(nbMemLayout, &RAM[0x0001])

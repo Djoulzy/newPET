@@ -32,11 +32,12 @@ func (C *CRTC) Init(ram []byte, io []byte, chargen []byte, video interface{}, co
 	C.Reg[R0] = 63
 	C.Reg[R1] = 40
 	C.Reg[R2] = 50
-	C.Reg[R3] = 8
+	C.Reg[R3] = 0b10001000
 	C.Reg[R4] = 32
 	C.Reg[R5] = 16
 	C.Reg[R6] = 25
 	C.Reg[R7] = 29
+	C.Reg[R9] = 8
 	C.Reg[R12] = 0
 	C.Reg[R13] = 0
 
@@ -54,11 +55,11 @@ func (C *CRTC) Init(ram []byte, io []byte, chargen []byte, video interface{}, co
 	C.CCLK = 0
 }
 
-func (C *CRTC) Disassemble() string {
-	var buf string
-	// buf = fmt.Sprintf("RstX: %03d - RstY: %03d - RC: %02d - VC: %03X - VCBase: %03X - VMLI: %02d", C.BeamX, C.BeamY, C.RC, C.VC, C.VCBASE, C.VMLI)
-	return buf
-}
+// func (C *CRTC) Disassemble() string {
+// 	var buf string
+// 	buf = fmt.Sprintf("BeamX: %03d - BeamY: %03d - CCLK: %02d - RasterLine: %02d", C.BeamX, C.BeamY, C.CCLK, C.RasterLine)
+// 	return buf
+// }
 
 // func (C *CRTC) saveRasterPos(val int) {
 // 	C.Reg[REG_RASTER] = byte(val)
@@ -75,23 +76,29 @@ func (C *CRTC) Disassemble() string {
 
 func (C *CRTC) drawChar(X int, Y int) {
 	// if C.drawArea && (C.Reg[REG_CTRL1]&DEN > 0) {
+	if C.visibleArea {
 		C.StandardTextMode(X, Y)
-	// 	C.VMLI++
-	// 	C.VC++
-	// } else if C.visibleArea {
-	// 	for column := 0; column < 8; column++ {
-	// 		C.graph.DrawPixel(X+column, Y, Colors[C.Reg[REG_BORDER_COL]&0b00001111])
-	// 	}
-	// }
+	} else if C.syncArea {
+		for column := 0; column < 8; column++ {
+			C.graph.DrawPixel(X+column, Y, Colors[Blue])
+		}
+	} else {
+		for column := 0; column < 8; column++ {
+			C.graph.DrawPixel(X+column, Y, Colors[Red])
+		}
+	}
 }
 
 func (C *CRTC) Run(debug bool) bool {
-	C.visibleArea = (C.CCLK <= C.Reg[R1]+50) && (C.RasterLine <= C.Reg[R6])
-	C.BeamX = int(C.CCLK * 8)
+	C.visibleArea = (C.CCLK < C.Reg[R1]) && (C.RasterLine < C.Reg[R6])
+	SyncAreaH := (C.CCLK >= C.Reg[R2]) && (C.CCLK <= C.Reg[R2]+(C.Reg[R3]&0b00001111))
+	SyncAreaV := (C.RasterLine >= C.Reg[R7]) && (C.RasterLine <= C.Reg[R7]+(C.Reg[R3]>>4))
+	C.syncArea = SyncAreaH || SyncAreaV
+	C.BeamX = int(C.CCLK) * 8
 
-	if C.visibleArea {
-		C.drawChar(C.BeamX, C.BeamY)
-	}
+	// log.Printf("BeamX: %d - BeamY: %d - CCLK: %02d - RasterLine: %02d", C.BeamX, C.BeamY, C.CCLK, C.RasterLine)
+
+	C.drawChar(C.BeamX, C.BeamY)
 
 	C.CCLK++
 	if C.CCLK >= C.Reg[R0] {
@@ -104,7 +111,7 @@ func (C *CRTC) Run(debug bool) bool {
 			C.graph.UpdateFrame()
 		} else {
 			C.RasterCount++
-			if C.RasterCount == 8 {
+			if C.RasterCount == C.Reg[R9] {
 				C.RasterLine++
 				C.RasterCount = 0
 			}

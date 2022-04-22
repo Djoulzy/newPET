@@ -12,5 +12,5 @@ func memLayouts() {
 	MEM.Layouts[0].Attach("BASIC-3", 2, 0xD000, BASIC3, mem.READONLY)
 	MEM.Layouts[0].Attach("EDITOR", 3, 0xE000, EDITOR, mem.READONLY)
 	MEM.Layouts[0].Attach("KERNAL", 4, 0xF000, KERNAL, mem.READONLY)
-	MEM.Show()
+	// MEM.Show()
 }

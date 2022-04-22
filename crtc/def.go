@@ -55,6 +55,7 @@ type CRTC struct {
 	CCLK        byte
 
 	visibleArea bool
+	syncArea    bool
 
 	graph graphic.Driver
 	MODE  byte
