@@ -1,9 +1,6 @@
 package crtc
 
 func (C *CRTC) StandardTextMode(X int, Y int) {
-	// var pixelData byte
-	// var palette [4]byte
-
 	screenChar := C.videoRam[C.RasterLine*C.Reg[R6]+C.CCLK]
 	pixelData := C.charRom[screenChar<<3+C.RasterCount]
 
