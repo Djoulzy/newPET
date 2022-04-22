@@ -86,7 +86,7 @@ func (C *CRTC) drawChar(X int, Y int) {
 }
 
 func (C *CRTC) Run(debug bool) bool {
-	C.visibleArea = (C.CCLK < C.Reg[R1]) && (C.RasterLine < C.Reg[R6])
+	C.visibleArea = (C.CCLK <= C.Reg[R1]+50) && (C.RasterLine <= C.Reg[R6])
 	C.BeamX = int(C.CCLK * 8)
 
 	if C.visibleArea {
@@ -94,7 +94,7 @@ func (C *CRTC) Run(debug bool) bool {
 	}
 
 	C.CCLK++
-	if C.CCLK > C.Reg[R0] {
+	if C.CCLK >= C.Reg[R0] {
 		C.CCLK = 0
 		C.BeamY++
 		if C.BeamY >= screenHeightPAL {
@@ -104,7 +104,7 @@ func (C *CRTC) Run(debug bool) bool {
 			C.graph.UpdateFrame()
 		} else {
 			C.RasterCount++
-			if C.RasterCount == 7 {
+			if C.RasterCount == 8 {
 				C.RasterLine++
 				C.RasterCount = 0
 			}

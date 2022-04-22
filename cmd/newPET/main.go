@@ -24,7 +24,7 @@ const (
 	basicSize   = 4096
 	ioSize      = 4096
 	chargenSize = 2048
-	editSize    = 4096
+	editSize    = 2048
 
 	nbMemLayout = 1
 
@@ -43,6 +43,7 @@ var (
 	KERNAL   []byte
 	BASIC1   []byte
 	BASIC2   []byte
+	BASIC3   []byte
 	EDITOR   []byte
 	CHARGEN  []byte
 	MEM      mem.BANK
@@ -66,11 +67,12 @@ func setup() {
 	RAM = make([]byte, ramSize)
 	IO = make([]byte, ioSize)
 	KERNAL = mem.LoadROM(kernalSize, "assets/roms/kernal-4.901465-22.bin")
-	BASIC1 = mem.LoadROM(basicSize, "assets/roms/basic-4-c000.901465-20.bin")
-	BASIC2 = mem.LoadROM(basicSize, "assets/roms/basic-4-d000.901465-21.bin")
+	BASIC1 = mem.LoadROM(basicSize, "assets/roms/basic-4-b000.901465-19.bin")
+	BASIC2 = mem.LoadROM(basicSize, "assets/roms/basic-4-c000.901465-20.bin")
+	BASIC3 = mem.LoadROM(basicSize, "assets/roms/basic-4-d000.901465-21.bin")
 	CHARGEN = mem.LoadROM(chargenSize, "assets/roms/characters-2.901447-10.bin")
-	// EDITOR = mem.LoadROM(editSize, "assets/roms/edit-4-n.901447-29.bin")
-	EDITOR = mem.LoadROM(editSize, "assets/roms/basic-4-d000.901465-21.bin")
+	EDITOR = mem.LoadROM(editSize, "assets/roms/edit-4-40-n-50Hz.901498-01.bin")
+	// EDITOR = mem.LoadROM(editSize, "assets/roms/edit-4-b.901474-02.bin")
 
 	mem.Clear(RAM)
 	mem.Clear(IO)
