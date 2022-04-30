@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"newPET/mem"
+	"github.com/Djoulzy/emutools/mem"
 	"strconv"
 	"strings"
 )

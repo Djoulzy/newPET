@@ -1,7 +1,8 @@
 package main
 
 import (
-	"newPET/mem"
+	"github.com/Djoulzy/emutools/mem"
+	
 	"os"
 )
 

@@ -4,9 +4,10 @@ import (
 	"io/ioutil"
 	"newPET/config"
 	"newPET/crtc"
-	"newPET/graphic"
-	"newPET/mem"
 	"runtime"
+
+	"github.com/Djoulzy/emutools/mem"
+	"github.com/Djoulzy/emutools/render"
 )
 
 const (
@@ -19,7 +20,7 @@ var (
 	conf             config.ConfigData
 	RAM, IO, CHARGEN []byte
 	CRTC             crtc.CRTC
-	outputDriver     graphic.Driver
+	outputDriver     render.SDL2Driver
 )
 
 func init() {
@@ -48,8 +49,8 @@ func start() {
 	IO = make([]byte, ioSize)
 	mem.Clear(IO)
 	CHARGEN = mem.LoadROM(chargenSize, "assets/roms/characters-2.901447-10")
-	outputDriver = &graphic.SDLDriver{}
-	CRTC.Init(RAM, IO, CHARGEN, outputDriver, &conf)
+	outputDriver = render.SDL2Driver{}
+	CRTC.Init(RAM, IO, CHARGEN, &outputDriver, &conf)
 }
 
 func main() {

@@ -2,7 +2,8 @@ package crtc
 
 import (
 	"newPET/config"
-	"newPET/graphic"
+
+	"github.com/Djoulzy/emutools/render"
 )
 
 const (
@@ -28,7 +29,7 @@ const (
 	lastDisplayLine  = 250
 )
 
-func (C *CRTC) Init(ram []byte, io []byte, chargen []byte, video interface{}, conf *config.ConfigData) {
+func (C *CRTC) Init(ram []byte, io []byte, chargen []byte, video *render.SDL2Driver, conf *config.ConfigData) {
 	C.Reg[R0] = 63
 	C.Reg[R1] = 40
 	C.Reg[R2] = 50
@@ -41,8 +42,8 @@ func (C *CRTC) Init(ram []byte, io []byte, chargen []byte, video interface{}, co
 	C.Reg[R12] = 0
 	C.Reg[R13] = 0
 
-	C.graph = video.(graphic.Driver)
-	C.graph.Init(winWidth, winHeight)
+	C.graph = video
+	C.graph.Init(winWidth, winHeight, "Go Commodore PET")
 	C.conf = conf
 
 	C.videoRam = ram[screenStart : screenStart+screenSize]

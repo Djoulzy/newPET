@@ -5,9 +5,6 @@ import (
 	"log"
 	"newPET/config"
 	"newPET/crtc"
-	"newPET/graphic"
-	"newPET/mem"
-	"newPET/mos6510"
 	"os"
 	"strconv"
 	"sync"
@@ -15,17 +12,20 @@ import (
 
 	"github.com/Djoulzy/Tools/clog"
 	"github.com/Djoulzy/Tools/confload"
+	"github.com/Djoulzy/emutools/mem"
+	"github.com/Djoulzy/emutools/mos6510"
+	"github.com/Djoulzy/emutools/render"
 	"github.com/mattn/go-tty"
 )
 
 const (
 	ramSize     = 65536
 	kernalSize  = 4096
-	basicSize   = 4096
-	ioSize      = 4096
+	basicSize   = 12288
+	ioSize      = 2048
 	chargenSize = 2048
-	editSize    = 2048
-	blanckSize  = 8192
+	editorSize  = 2048
+	blanckSize  = 12288
 
 	nbMemLayout = 1
 
@@ -42,16 +42,14 @@ var (
 	RAM      []byte
 	IO       []byte
 	KERNAL   []byte
-	BASIC1   []byte
-	BASIC2   []byte
-	BASIC3   []byte
+	BASIC    []byte
 	EDITOR   []byte
 	CHARGEN  []byte
 	BLANK    []byte
 	MEM      mem.BANK
 	IOAccess mem.MEMAccess
 
-	outputDriver graphic.Driver
+	outputDriver render.SDL2Driver
 	CRTC         crtc.CRTC
 	cpuTurn      bool
 	run          bool
@@ -70,12 +68,11 @@ func setup() {
 	IO = make([]byte, ioSize)
 	BLANK = make([]byte, blanckSize)
 	KERNAL = mem.LoadROM(kernalSize, "assets/roms/kernal-4.901465-22.bin")
-	BASIC1 = mem.LoadROM(basicSize, "assets/roms/basic-4-b000.901465-19.bin")
-	BASIC2 = mem.LoadROM(basicSize, "assets/roms/basic-4-c000.901465-20.bin")
-	BASIC3 = mem.LoadROM(basicSize, "assets/roms/basic-4-d000.901465-21.bin")
+	BASIC = mem.LoadROM(basicSize, "assets/roms/basic-4.901465-23-20-21.bin")
+	// BASIC2 = mem.LoadROM(basicSize, "assets/roms/basic-4-c000.901465-20.bin")
+	// BASIC3 = mem.LoadROM(basicSize, "assets/roms/basic-4-d000.901465-21.bin")
 	CHARGEN = mem.LoadROM(chargenSize, "assets/roms/characters-2.901447-10.bin")
-	// EDITOR = mem.LoadROM(editSize, "assets/roms/edit-4-40-n-50Hz.901498-01.bin")
-	EDITOR = mem.LoadROM(editSize, "assets/roms/edit-4-b.901474-02.bin")
+	EDITOR = mem.LoadROM(editorSize, "assets/roms/edit-4-40-n-50Hz.901498-01.bin")
 
 	mem.Clear(RAM)
 	mem.Clear(IO)
@@ -90,11 +87,11 @@ func setup() {
 	// MEM Setup
 	memLayouts()
 
-	outputDriver = &graphic.SDLDriver{}
-	CRTC.Init(RAM, IO, CHARGEN, outputDriver, conf)
+	outputDriver = render.SDL2Driver{}
+	CRTC.Init(RAM, IO, CHARGEN, &outputDriver, conf)
 
 	// CPU Setup
-	cpu.Init(&MEM, conf)
+	cpu.Init(&MEM)
 }
 
 func input() {
@@ -156,7 +153,7 @@ func input() {
 
 func Disassamble() {
 	// fmt.Printf("\n%s %s", vic.Disassemble(), cpu.Disassemble())
-	fmt.Printf("%s\n", cpu.Disassemble())
+	fmt.Printf("%s\n", cpu.Trace())
 }
 
 func timeTrack(start time.Time, name string) {
