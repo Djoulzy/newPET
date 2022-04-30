@@ -14,10 +14,6 @@ const (
 	rasterHeightPAL = 284
 	cyclesPerLine   = 63
 
-	rasterTime = 1                  // Nb of cycle to put 1 byte on a line
-	rasterLine = rasterWidthPAL / 8 // Nb of cycle to draw a full line
-	fullRaster = rasterLine * rasterHeightPAL
-
 	winWidth      = screenWidthPAL
 	winHeight     = screenHeightPAL
 	visibleWidth  = 320
@@ -42,8 +38,11 @@ func (C *CRTC) Init(ram []byte, io []byte, chargen []byte, video *render.SDL2Dri
 	C.Reg[R12] = 0
 	C.Reg[R13] = 0
 
+	C.screenWidth = int(C.Reg[R1]) * 7
+	C.screenHeight = int(C.Reg[R6]) * 8
+
 	C.graph = video
-	C.graph.Init(winWidth, winHeight, "Go Commodore PET")
+	C.graph.Init(C.screenWidth, C.screenHeight, "Go Commodore PET")
 	C.conf = conf
 
 	C.videoRam = ram[screenStart : screenStart+screenSize]

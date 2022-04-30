@@ -162,23 +162,37 @@ func timeTrack(start time.Time, name string) {
 }
 
 func RunEmulation() {
+	// var key byte
 	// defer timeTrack(time.Now(), "RunEmulation")
-	CRTC.Run(!run)
-	if cpu.State == mos6510.ReadInstruction && !run {
-		execInst.Lock()
-	}
-
-	cpu.NextCycle()
-	if cpu.State == mos6510.ReadInstruction {
-		if conf.Breakpoint == cpu.InstStart {
-			conf.Disassamble = true
-			run = false
+	for {
+		CRTC.Run(!run)
+		if cpu.State == mos6510.ReadInstruction && !run {
+			execInst.Lock()
 		}
-	}
 
-	if cpu.State == mos6510.ReadInstruction {
-		if !run || conf.Disassamble {
-			Disassamble()
+		// if MEM.Read(0xC000) == 0 {
+		// 	key = keyMap[InputLine.KeyCode]
+		// 	if InputLine.Mode == 1073742048 {
+		// 		key -= 0x40
+		// 	}
+		// 	MEM.Write(0xC000, key)
+		// 	InputLine.KeyCode = 0
+		// 	InputLine.Mode = 0
+		// }
+
+		cpu.NextCycle()
+		if cpu.State == mos6510.ReadInstruction {
+			outputDriver.DumpCode(cpu.FullInst)
+			if conf.Breakpoint == cpu.InstStart {
+				conf.Disassamble = true
+				run = false
+			}
+		}
+
+		if cpu.State == mos6510.ReadInstruction {
+			if !run || conf.Disassamble {
+				Disassamble()
+			}
 		}
 	}
 }
@@ -207,13 +221,9 @@ func main() {
 
 	run = true
 	cpuTurn = true
-	// go func() {
-	for {
-		RunEmulation()
-	}
-	// }()
 
-	// outputDriver.Run()
+	go RunEmulation()
+	outputDriver.Run()
 
 	// cpu.DumpStats()
 	// <-exit

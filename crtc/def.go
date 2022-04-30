@@ -47,7 +47,9 @@ var Colors [16]color.Color = [16]color.Color{
 
 // VIC :
 type CRTC struct {
-	Reg [18]byte
+	Reg          [18]byte
+	screenWidth  int
+	screenHeight int
 
 	conf        *config.ConfigData
 	BeamX       int
