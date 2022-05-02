@@ -12,7 +12,7 @@ import (
 
 const (
 	ramSize     = 65536
-	chargenSize = 4096
+	chargenSize = 2048
 	ioSize      = 4096
 )
 
@@ -48,15 +48,14 @@ func start() {
 	mem.Clear(RAM)
 	IO = make([]byte, ioSize)
 	mem.Clear(IO)
-	CHARGEN = mem.LoadROM(chargenSize, "assets/roms/characters-2.901447-10")
+	CHARGEN = mem.LoadROM(chargenSize, "assets/roms/characters-2.901447-10.bin")
 	outputDriver = render.SDL2Driver{}
 	CRTC.Init(RAM, IO, CHARGEN, &outputDriver, &conf)
 }
 
 func main() {
 	start()
-	for {
-		CRTC.Run(false)
-		// vic.Stats()
-	}
+
+	go CRTC.Run(false)
+	outputDriver.Run()
 }
