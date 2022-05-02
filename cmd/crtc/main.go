@@ -14,6 +14,9 @@ const (
 	ramSize     = 65536
 	chargenSize = 2048
 	ioSize      = 4096
+
+	screenStart = 0x8000
+	screenSize  = 4096
 )
 
 var (
@@ -51,6 +54,12 @@ func start() {
 	CHARGEN = mem.LoadROM(chargenSize, "assets/roms/characters-2.901447-10.bin")
 	outputDriver = render.SDL2Driver{}
 	CRTC.Init(RAM, IO, CHARGEN, &outputDriver, &conf)
+
+	cpt := 0
+	for i := screenStart; i < screenStart+screenSize; i++ {
+		RAM[uint16(i)] = byte(cpt)
+		cpt++
+	}
 }
 
 func main() {
