@@ -9,6 +9,7 @@ type Globals struct {
 	LogLevel     int
 	Display      bool
 	LoadPRG      string
+	Mhz          int
 }
 
 type Debug struct {

@@ -48,9 +48,9 @@ func start() {
 	conf.Disassamble = false
 
 	RAM = make([]byte, ramSize)
-	mem.Clear(RAM)
+	mem.Clear(RAM, 0, 0x00)
 	IO = make([]byte, ioSize)
-	mem.Clear(IO)
+	mem.Clear(IO, 0, 0x00)
 	CHARGEN = mem.LoadROM(chargenSize, "assets/roms/characters-2.901447-10.bin")
 	outputDriver = render.SDL2Driver{}
 	CRTC.Init(RAM, IO, CHARGEN, &outputDriver, &conf)
@@ -66,5 +66,5 @@ func main() {
 	start()
 
 	go CRTC.Run(false)
-	outputDriver.Run()
+	outputDriver.Run(true)
 }

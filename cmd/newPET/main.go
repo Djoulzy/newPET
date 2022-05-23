@@ -74,8 +74,8 @@ func setup() {
 	CHARGEN = mem.LoadROM(chargenSize, "assets/roms/characters-2.901447-10.bin")
 	EDITOR = mem.LoadROM(editorSize, "assets/roms/edit-4-40-n-50Hz.901498-01.bin")
 
-	mem.Clear(RAM)
-	mem.Clear(IO)
+	mem.Clear(RAM, 0, 0x00)
+	mem.Clear(IO, 0, 0x00)
 	// mem.DisplayCharRom(CHARGEN, 1, 8, 16)
 
 	// RAM[0x0001] = 0x00
@@ -91,7 +91,7 @@ func setup() {
 	CRTC.Init(RAM, IO, CHARGEN, &outputDriver, conf)
 
 	// CPU Setup
-	cpu.Init(&MEM)
+	cpu.Init(conf.Mhz, &MEM)
 }
 
 func input() {
@@ -103,10 +103,8 @@ func input() {
 		r, _ := keyb.ReadRune()
 		switch r {
 		case 's':
-			Disassamble()
 			MEM.DumpStack(cpu.SP)
 		case 'z':
-			Disassamble()
 			MEM.Dump(0)
 		case 'x':
 			// DumpMem(&pla, "memDump.bin")
@@ -151,22 +149,18 @@ func input() {
 	}
 }
 
-func Disassamble() {
-	// fmt.Printf("\n%s %s", vic.Disassemble(), cpu.Disassemble())
-	fmt.Printf("%s\n", cpu.Trace())
-}
-
 func timeTrack(start time.Time, name string) {
 	elapsed := time.Now().Sub(start)
 	log.Printf("%s took %s", name, elapsed)
 }
 
 func RunEmulation() {
+	var speed float64
 	// var key byte
 	// defer timeTrack(time.Now(), "RunEmulation")
 	for {
 		CRTC.Run(!run)
-		if cpu.State == mos6510.ReadInstruction && !run {
+		if cpu.CycleCount == 1 && !run {
 			execInst.Lock()
 		}
 
@@ -180,8 +174,8 @@ func RunEmulation() {
 		// 	InputLine.Mode = 0
 		// }
 
-		cpu.NextCycle()
-		if cpu.State == mos6510.ReadInstruction {
+		speed = cpu.NextCycle()
+		if cpu.CycleCount == 1 {
 			outputDriver.DumpCode(cpu.FullInst)
 			if conf.Breakpoint == cpu.InstStart {
 				conf.Disassamble = true
@@ -189,9 +183,15 @@ func RunEmulation() {
 			}
 		}
 
-		if cpu.State == mos6510.ReadInstruction {
+		if cpu.CycleCount == 1 {
+			outputDriver.DumpCode(cpu.FullInst)
+			outputDriver.SetSpeed(speed)
+			if conf.Breakpoint == cpu.InstStart {
+				conf.Disassamble = true
+				run = false
+			}
 			if !run || conf.Disassamble {
-				Disassamble()
+				fmt.Printf("%s\n", cpu.FullDebug)
 			}
 		}
 	}
@@ -221,9 +221,11 @@ func main() {
 
 	run = true
 	cpuTurn = true
+	outputDriver.ShowCode = true
+	outputDriver.ShowFps = true
 
 	go RunEmulation()
-	outputDriver.Run()
+	outputDriver.Run(true)
 
 	// cpu.DumpStats()
 	// <-exit
