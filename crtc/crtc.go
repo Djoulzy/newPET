@@ -42,7 +42,7 @@ func (C *CRTC) Init(ram []byte, io []byte, chargen []byte, video *render.SDL2Dri
 	C.screenHeight = int(C.Reg[R6]) * 8
 
 	C.graph = video
-	C.graph.Init(C.screenWidth, C.screenHeight, "Go Commodore PET", true)
+	C.graph.Init(C.screenWidth, C.screenHeight, "Go Commodore PET", true, conf.Disassamble)
 	C.conf = conf
 
 	C.videoRam = ram[screenStart : screenStart+screenSize]

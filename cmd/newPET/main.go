@@ -7,7 +7,6 @@ import (
 	"newPET/crtc"
 	"os"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/Djoulzy/Tools/clog"
@@ -51,9 +50,8 @@ var (
 
 	outputDriver render.SDL2Driver
 	CRTC         crtc.CRTC
-	cpuTurn      bool
 	run          bool
-	execInst     sync.Mutex
+	trace        bool
 )
 
 // func init() {
@@ -91,7 +89,7 @@ func setup() {
 	CRTC.Init(RAM, IO, CHARGEN, &outputDriver, conf)
 
 	// CPU Setup
-	cpu.Init(conf.Mhz, &MEM)
+	cpu.Init(conf.CPUModel, conf.Mhz, &MEM, conf.Debug || conf.Disassamble)
 }
 
 func input() {
@@ -109,22 +107,17 @@ func input() {
 		case 'x':
 			// DumpMem(&pla, "memDump.bin")
 		case 'r':
-			conf.Disassamble = false
 			run = true
-			execInst.Unlock()
+			trace = false
 		case 'l':
 			// LoadPRG(&pla, "./prg/GARDEN.prg")
 			LoadPRG(&MEM, conf.LoadPRG)
 			// addr, _ := LoadPRG(mem.Val, conf.LoadPRG)
 			// cpu.GoTo(addr)
 		case ' ':
-			if run {
-				conf.Disassamble = true
-				run = false
-			} else {
-				execInst.Unlock()
-			}
-			// fmt.Printf("\n(s) Stack Dump - (z) Zero Page - (r) Run - (sp) Pause / unpause > ")
+			fmt.Printf("%s\n", cpu.FullDebug)
+			trace = true
+			run = true
 		case 'w':
 			fmt.Printf("\nFill Color RAM")
 			for i := 0xD800; i < 0xDC00; i++ {
@@ -134,7 +127,7 @@ func input() {
 			// 	IO[uint16(i)] = 0
 			// }
 		case 'q':
-			cpu.DumpStats()
+			fmt.Printf("%s\n", cpu.FullDebug)
 			os.Exit(0)
 		default:
 			dumpAddr += string(r)
@@ -160,9 +153,6 @@ func RunEmulation() {
 	// defer timeTrack(time.Now(), "RunEmulation")
 	for {
 		CRTC.Run(!run)
-		if cpu.CycleCount == 1 && !run {
-			execInst.Lock()
-		}
 
 		// if MEM.Read(0xC000) == 0 {
 		// 	key = keyMap[InputLine.KeyCode]
@@ -175,23 +165,16 @@ func RunEmulation() {
 		// }
 
 		speed = cpu.NextCycle()
-		if cpu.CycleCount == 1 {
-			outputDriver.DumpCode(cpu.FullInst)
-			if conf.Breakpoint == cpu.InstStart {
-				conf.Disassamble = true
-				run = false
-			}
-		}
 
 		if cpu.CycleCount == 1 {
+			if trace {
+				run = false
+			}
 			outputDriver.DumpCode(cpu.FullInst)
 			outputDriver.SetSpeed(speed)
 			if conf.Breakpoint == cpu.InstStart {
-				conf.Disassamble = true
-				run = false
-			}
-			if !run || conf.Disassamble {
 				fmt.Printf("%s\n", cpu.FullDebug)
+				trace = true
 			}
 		}
 	}
@@ -220,7 +203,7 @@ func main() {
 	go input()
 
 	run = true
-	cpuTurn = true
+	trace = false
 	outputDriver.ShowCode = true
 	outputDriver.ShowFps = true
 
